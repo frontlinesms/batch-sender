@@ -2,9 +2,10 @@ var needle = require('needle'),
 fs = require('fs'),
 _ = require('lodash'),
 xmlbuilder = require('xmlbuilder'),
+stream = require('stream'),
 Converter = require("csvtojson").Converter;
 
-var converter = new Converter({});
+var converter = new Converter({constructResult:false});
 
 var splitToChunks = function(array, chunkSize) {
 	var range = function(n) {
@@ -24,19 +25,38 @@ var submitChunkAsBulkSms = function(chunk) {
 	sms.ele('ud', {'type': 'text', 'encoding': 'default'}, 'text');
 	var xml = root.end({pretty: true});
 	needle.post('http://httpbin.org/post', xml, {'headers': {'Content-Type': 'application/xml'} }, function(err, resp) {
-		if (!err) {
-			console.log(resp.body) ;
-		}
 		if (err) {
 			console.log('neddle error');
 		}
 	});
 };
 
-converter.fromFile("./input.csv",function(err,result){
-	var mobiles = _.map(result, 'Mobile Number');
-	_(splitToChunks(mobiles, 250)).forEach(function(chunk, index) {
-		console.log("processing chunk number " + index);
-		submitChunkAsBulkSms(chunk);
-	});
+var startTime = Date.now();
+var readStream=require("fs").createReadStream("input.csv");
+converter.setEncoding('utf8');
+var batch = [], batchCounter = 0, noMobileCounter = 0, hasMobileCounter = 0;
+converter.on('data', function(chunk) {
+	var mobile = JSON.parse(chunk)['mobile_number'];
+	if(mobile) {
+		batch.push(mobile);
+		hasMobileCounter++;
+		if(batch.length === 250) {
+			submitChunkAsBulkSms(batch);
+			batch = [];
+			batchCounter++;
+		}
+	}
+	else {
+		noMobileCounter++;
+	}
 });
+converter.on('end', function() {
+	if(batch.length > 0) {
+		submitChunkAsBulkSms(batch);
+		batch = [];
+		batchCounter++;
+	}
+	console.log('sumbitted total of ' + hasMobileCounter + ' SMS in ' +  batchCounter + ' batches. There were ' + noMobileCounter + ' entries with no mobile number');
+	console.log('completed in ' + (Date.now() - startTime)/1000 + ' seconds');
+});
+readStream.pipe(converter);
