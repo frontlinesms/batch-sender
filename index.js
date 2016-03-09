@@ -44,6 +44,9 @@ converter.on('data', function(chunk) {
 			submitChunkAsBulkSms(batch);
 			batch = [];
 			batchCounter++;
+			if(batchCounter % 100 === 0) {
+				console.log(batchCounter + " batches so far");
+			}
 		}
 	}
 	else {
