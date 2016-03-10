@@ -32,6 +32,8 @@ var submitChunkAsBulkSms = function(chunk) {
 	var sms = root.ele('sms', {'type': 'mt'});
 	sms.ele('source').ele('address').ele('number', {'type': 'abbreviated'}, '8786');
 	_(chunk).forEach(function(mobile) {
+		// strip any non-numeric and non-plus characters out
+		mobile = mobile.replace(/[^0-9|^+]/g, '');
 		if(!mobile.toString().startsWith("+")) {
 			mobile = "+" + mobile;
 		}
