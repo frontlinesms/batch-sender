@@ -25,6 +25,8 @@ var splitToChunks = function(array, chunkSize) {
 	return range(Math.ceil(array.length/chunkSize)).map((x,i) => array.slice(i*chunkSize,i*chunkSize+chunkSize));
 };
 
+var writeStream = fs.createWriteStream("failed_csv_" + new Date().getTime() + ".csv", { autoClose : true });
+writeStream.write("mobile_number\n")
 var submitChunkAsBulkSms = function(chunk) {
 	var root = xmlbuilder.create('message');
 	var sms = root.ele('sms', {'type': 'mt'});
@@ -44,13 +46,16 @@ var submitChunkAsBulkSms = function(chunk) {
 	};
 	needle.post('http://requestb.in/upzopduq', xml, { 'headers': headers }, function(err, resp) {
 		if (err) {
-			console.log('neddle error');
+			console.log(err);
+			_(chunk).forEach(function(mobile) {
+				writeStream.write( mobile + "\n");
+			});
 		}
 	});
 };
 
 var startTime = Date.now();
-var readStream=require("fs").createReadStream(filePath);
+var readStream = fs.createReadStream(filePath);
 converter.setEncoding('utf8');
 var batch = [], batchCounter = 0, noMobileCounter = 0, hasMobileCounter = 0;
 converter.on('data', function(chunk) {
