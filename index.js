@@ -16,7 +16,7 @@ var splitToChunks = function(array, chunkSize) {
 
 var submitChunkAsBulkSms = function(chunk) {
 	var root = xmlbuilder.create('message');
-	var sms = root.ele('sms');
+	var sms = root.ele('sms', {'type': 'mt'});
 	sms.ele('source').ele('address').ele('number', {'type': 'abbreviated'}, '8786');
 	_(chunk).forEach(function(mobile) {
 		sms.ele('destination').ele('address').ele('number', {'type': 'international'}, '+' + mobile);
