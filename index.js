@@ -19,7 +19,10 @@ var submitChunkAsBulkSms = function(chunk) {
 	var sms = root.ele('sms', {'type': 'mt'});
 	sms.ele('source').ele('address').ele('number', {'type': 'abbreviated'}, '8786');
 	_(chunk).forEach(function(mobile) {
-		sms.ele('destination').ele('address').ele('number', {'type': 'international'}, '+' + mobile);
+		if(!mobile.toString().startsWith("+")) {
+			mobile = "+" + mobile;
+		}
+		sms.ele('destination').ele('address').ele('number', {'type': 'international'}, mobile);
 	});
 	sms.ele('rsr', {'type': 'all'});
 	sms.ele('ud', {'type': 'text', 'encoding': 'default'}, 'text');
