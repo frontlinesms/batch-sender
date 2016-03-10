@@ -7,6 +7,17 @@ Converter = require("csvtojson").Converter;
 
 var converter = new Converter({constructResult:false});
 
+//retrieve command line arguments
+if(process.argv.length < 6) {
+	console.log("Usage : ./run input.csv username password 'text to send'");
+	process.exit();
+}
+var filePath = process.argv[2],
+username = process.argv[3],
+password = process.argv[4],
+textToSend = process.argv[5];
+
+//TODO it seems we dont need this anymore
 var splitToChunks = function(array, chunkSize) {
 	var range = function(n) {
 		return Array.apply(null,Array(n)).map((x,i) => i);
@@ -25,9 +36,13 @@ var submitChunkAsBulkSms = function(chunk) {
 		sms.ele('destination').ele('address').ele('number', {'type': 'international'}, mobile);
 	});
 	sms.ele('rsr', {'type': 'all'});
-	sms.ele('ud', {'type': 'text', 'encoding': 'default'}, 'text');
+	sms.ele('ud', {'type': 'text', 'encoding': 'default'}, textToSend);
 	var xml = root.end({pretty: true});
-	needle.post('http://httpbin.org/post', xml, {'headers': {'Content-Type': 'application/xml'} }, function(err, resp) {
+	var headers = {
+		'Content-Type': 'application/xml',
+		'Authorization' : 'Basic ' + new Buffer(username + ":" + password).toString("base64")
+	};
+	needle.post('http://requestb.in/upzopduq', xml, { 'headers': headers }, function(err, resp) {
 		if (err) {
 			console.log('neddle error');
 		}
@@ -35,7 +50,7 @@ var submitChunkAsBulkSms = function(chunk) {
 };
 
 var startTime = Date.now();
-var readStream=require("fs").createReadStream("input.csv");
+var readStream=require("fs").createReadStream(filePath);
 converter.setEncoding('utf8');
 var batch = [], batchCounter = 0, noMobileCounter = 0, hasMobileCounter = 0;
 converter.on('data', function(chunk) {
