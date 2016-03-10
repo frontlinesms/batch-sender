@@ -33,7 +33,7 @@ var submitChunkAsBulkSms = function(chunk) {
 	sms.ele('source').ele('address').ele('number', {'type': 'abbreviated'}, '8786');
 	_(chunk).forEach(function(mobile) {
 		// strip any non-numeric and non-plus characters out
-		mobile = mobile.replace(/[^0-9|^+]/g, '');
+		mobile = mobile.toString().replace(/[^0-9|^+]/g, '');
 		if(!mobile.toString().startsWith("+")) {
 			mobile = "+" + mobile;
 		}
