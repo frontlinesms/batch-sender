@@ -9,7 +9,7 @@ var converter = new Converter({constructResult:false});
 
 //retrieve command line arguments
 if(process.argv.length < 6) {
-	console.log("Usage : ./run input.csv username password 'text to send'");
+	console.log("Usage : node index.js input.csv username password 'text to send'");
 	process.exit();
 }
 var filePath = process.argv[2],
