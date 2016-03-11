@@ -48,7 +48,7 @@ var submitChunkAsBulkSms = function(chunk) {
 		'Authorization' : 'Basic ' + new Buffer(username + ":" + password).toString("base64")
 	};
 	needle.post(host, xml, { 'headers': headers }, function(err, resp) {
-		if (err) {
+		if (err || resp.statusCode > 299) {
 			console.log(err);
 			_(chunk).forEach(function(mobile) {
 				writeStream.write( mobile + "\n");
