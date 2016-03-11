@@ -9,13 +9,14 @@ var converter = new Converter({constructResult:false});
 
 //retrieve command line arguments
 if(process.argv.length < 6) {
-	console.log("Usage : node index.js input.csv username password 'text to send'");
+	console.log("Usage : node index.js input.csv host username password 'text to send'");
 	process.exit();
 }
 var filePath = process.argv[2],
-username = process.argv[3],
-password = process.argv[4],
-textToSend = process.argv[5];
+host = process.argv[3],
+username = process.argv[4],
+password = process.argv[5],
+textToSend = process.argv[6];
 
 //TODO it seems we dont need this anymore
 var splitToChunks = function(array, chunkSize) {
@@ -26,7 +27,7 @@ var splitToChunks = function(array, chunkSize) {
 };
 
 var writeStream = fs.createWriteStream("failed_csv_" + new Date().getTime() + ".csv", { autoClose : true });
-writeStream.write("mobile_number\n")
+writeStream.write("mobile_number\n");
 var submitChunkAsBulkSms = function(chunk) {
 	var root = xmlbuilder.create('message');
 	var sms = root.ele('sms', {'type': 'mt'});
@@ -40,13 +41,13 @@ var submitChunkAsBulkSms = function(chunk) {
 		sms.ele('destination').ele('address').ele('number', {'type': 'international'}, mobile);
 	});
 	sms.ele('rsr', {'type': 'all'});
-	sms.ele('ud', {'type': 'text', 'encoding': 'default'}, textToSend);
+	sms.ele('ud', {'type': 'text', 'encoding': 'unicode'}, textToSend);
 	var xml = root.end({pretty: true});
 	var headers = {
-		'Content-Type': 'application/xml',
+		'Content-Type': 'text/xml',
 		'Authorization' : 'Basic ' + new Buffer(username + ":" + password).toString("base64")
 	};
-	needle.post('http://requestb.in/upzopduq', xml, { 'headers': headers }, function(err, resp) {
+	needle.post(host, xml, { 'headers': headers }, function(err, resp) {
 		if (err) {
 			console.log(err);
 			_(chunk).forEach(function(mobile) {
